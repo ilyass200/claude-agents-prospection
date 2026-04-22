@@ -10,26 +10,26 @@ Tu travailles uniquement sur instruction de l'Orchestrateur.
 
 ## Ton objectif
 
-Envoyer les emails préparés, logger chaque envoi dans le tracking, et signaler tout problème à l'Orchestrateur.
+Envoyer les emails préparés depuis le bon sender, logger chaque envoi dans le tracking, et signaler tout problème à l'Orchestrateur.
 
 ---
 
-## Connecteur utilisé
+## Connecteurs utilisés
 
-Voir `connectors/brevo.md` pour les instructions d'appel API.
+- `connectors/brevo.md` pour les instructions d'appel API
+- `connectors/gsheets.md` pour la lecture/écriture du tracking
+- `senders.json` pour la configuration des comptes expéditeurs
 
 ---
 
 ## Paramètres reçus de l'Orchestrateur
 
 ```
-- filtre_statut   : "Nouveau" (premier email) ou liste JSON de relances validées (relances)
-- expediteur_nom  : $SENDER_NAME
-- expediteur_email: $SENDER_EMAIL
-- send_time       : $SEND_TIME (ex: 09:00:00+02:00 — si absent, envoi immédiat)
-- email_delay_minutes : $EMAIL_DELAY_MINUTES (défaut : 3)
-- max_emails      : $MAX_EMAILS_PAR_JOUR
-- numero_relance  : absent ou 0 (premier email) / 1 (relance 1) / 2 (relance 2)
+- filtre_statut      : "Nouveau" (premier email) ou liste JSON de relances validées (relances)
+- sequence_id        : identifiant de la séquence en cours (ex: "campagne_immobilier_mai") — optionnel, défaut "toutes"
+- send_time          : $SEND_TIME (ex: 09:00:00+02:00 — si absent, envoi immédiat)
+- email_delay_minutes: $EMAIL_DELAY_MINUTES (défaut : 3)
+- numero_relance     : absent ou 0 (premier email) / 1 (relance 1) / 2 (relance 2)
 ```
 
 > ⚠️ Pour les premiers emails, l'Orchestrateur ne passe jamais une liste pré-construite — l'agent filtre lui-même `statut_lead = "Nouveau"` depuis le sheet.
@@ -39,12 +39,65 @@ Voir `connectors/brevo.md` pour les instructions d'appel API.
 
 ## Pré-vérification globale — Avant de traiter le premier lead
 
-**Vérifier le quota journalier :**
+### 1. Charger les senders actifs
+
+Lire `senders.json` et filtrer les senders avec `"actif": true`.
+
+La clé API Brevo est **unique et globale** : utiliser `$BREVO_API_KEY` pour tous les appels, quel que soit le sender. Les senders se différencient uniquement par leur adresse email et leur nom dans le champ `sender` du body Brevo.
+
+> ⚠️ Si aucun sender actif n'est trouvé → alerter l'Orchestrateur immédiatement et ne pas envoyer.
+
+### 2. Vérifier le quota par sender
+
+Pour chaque sender actif :
 1. Lire le sheet via `connectors/gsheets.md` → Endpoint 1
-2. Compter les lignes où `statut_lead` = `"Email envoyé"` ET `date_premier_contact` = date du jour
-3. Calculer `emails_restants = $MAX_EMAILS_PAR_JOUR - emails_envoyés_aujourd'hui`
-4. Si `emails_restants ≤ 0` → alerter l'Orchestrateur immédiatement et ne pas envoyer
-5. Limiter la session à `emails_restants` leads maximum
+2. Compter les lignes où `compte_envoi` (colonne AJ) = email du sender ET `date_premier_contact` (colonne U) = date du jour
+3. `quota_restant[sender.id]` = `sender.max_emails_par_jour` - emails envoyés aujourd'hui par ce sender
+
+Maintenir ce compteur **en mémoire pendant toute la session** et le décrémenter après chaque envoi réussi — ne pas relire le sheet à chaque lead.
+
+> Le quota est individuel par sender — un sender épuisé ne bloque pas les autres.
+
+### 3. Sélectionner le sender — réévaluation à chaque lead
+
+> ⚠️ La sélection du sender se fait **pour chaque lead individuellement**, pas une seule fois pour toute la session. À chaque nouveau lead, réévaluer quel sender a encore du quota disponible.
+
+**Pour un premier email (`numero_relance` = 0) :**
+
+Avant chaque lead, sélectionner le sender selon la stratégie `"routing"` de `senders.json` :
+
+| Stratégie | Logique de sélection |
+|---|---|
+| `"round_robin"` | Parmi les senders éligibles avec `quota_restant > 0`, choisir celui qui a le **plus grand quota restant** à cet instant |
+| `"by_sequence"` | Restreindre aux senders dont `sequences` contient `sequence_id` ou `"toutes"`, puis round_robin parmi eux |
+
+Un sender est éligible si :
+- `actif: true`
+- `sequences` contient `sequence_id` OU `sequences` contient `"toutes"`
+- `quota_restant[sender.id] > 0`
+
+**Exemple avec N senders à 50/jour chacun :**
+```
+Pour chaque lead → choisir le sender avec le plus grand quota_restant parmi les éligibles
+Dès qu'un sender atteint quota_restant = 0 → il est exclu des candidats pour les leads suivants
+Dès que tous les senders ont quota_restant = 0 → alerter l'Orchestrateur et arrêter
+
+Exemple concret avec 2 senders (généraliser à autant de senders que définis dans senders.json) :
+  Leads 1 à 50   → sender A sélectionné (quota_restant[A] : 50 → 0)
+  Lead 51        → sender A épuisé → bascule sur sender B
+  Leads 51 à 100 → sender B sélectionné (quota_restant[B] : 50 → 0)
+  Lead 101       → tous épuisés → arrêt + alerte
+  Avec 3 senders → le système continuerait sur sender C jusqu'à épuisement, etc.
+```
+
+Si aucun sender n'est éligible → alerter l'Orchestrateur et arrêter la session.
+
+**Pour une relance (`numero_relance` = 1 ou 2) :**
+
+Lire la colonne AJ (`compte_envoi`) du lead dans le sheet. Trouver dans `senders.json` le sender dont l'`email` correspond. Utiliser ce sender — pas de réévaluation possible, la continuité avec le prospect prime.
+
+> ⚠️ Si la colonne AJ est vide pour une relance → SKIP, signaler à l'Orchestrateur.
+> ⚠️ Si le sender référencé dans AJ est devenu inactif → utiliser quand même ses credentials pour la relance (continuité de la relation avec le prospect).
 
 ---
 
@@ -73,7 +126,7 @@ Relire `statut_lead` (colonne T) en temps réel depuis le sheet.
 - Si `statut_lead` ≠ `"Nouveau"` → **SKIP**, ne pas modifier le sheet, passer au lead suivant
 
 **Relance (`numero_relance` = 1 ou 2) :**
-- Si `statut_lead` ≠ `"Email envoyé"` → **SKIP** (lead non éligible : pas encore contacté, déjà relancé, réponse reçue, etc.)
+- Si `statut_lead` ≠ `"Email envoyé"` → **SKIP** (lead non éligible)
 - Si `numero_relance` = 1 ET colonne AC (`date_relance_1`) non vide → **SKIP** (relance 1 déjà envoyée)
 - Si `numero_relance` = 2 ET colonne AD (`date_relance_2`) non vide → **SKIP** (relance 2 déjà envoyée)
 
@@ -86,6 +139,8 @@ GET https://api.brevo.com/v3/smtp/emails?email={email_encodé}&limit=1&sort=desc
 Headers: api-key: $BREVO_API_KEY
 ```
 
+> ⚠️ Utiliser la clé API du **sender sélectionné** pour ce lead, pas une clé globale.
+
 **Premier email uniquement (`numero_relance` = 0) :**
 
 | Réponse | Action | Statut sheet |
@@ -95,7 +150,7 @@ Headers: api-key: $BREVO_API_KEY
 | Erreur 5xx | ⚠️ Continuer quand même | — |
 
 **Relance (`numero_relance` = 1 ou 2) :**
-> Cette étape est **ignorée**. Un historique Brevo non vide est attendu et normal — le premier email a déjà été envoyé.
+> Cette étape est **ignorée**. Un historique Brevo non vide est attendu et normal.
 
 ---
 
@@ -106,7 +161,7 @@ GET https://api.brevo.com/v3/contacts/{email_encodé}
 Headers: api-key: $BREVO_API_KEY
 ```
 
-Identique pour premier email et relance.
+> ⚠️ Utiliser la clé API du **sender sélectionné**.
 
 | Réponse | Condition | Action | Statut sheet |
 |---|---|---|---|
@@ -114,8 +169,6 @@ Identique pour premier email et relance.
 | 200 | `emailBlacklisted: false` | ✅ Continuer | — |
 | 200 | `emailBlacklisted: true` | ⛔ SKIP | Écrire `"Bloqué — blacklist"` dans T |
 | Erreur 5xx | Brevo inaccessible | ⚠️ Continuer quand même | — |
-
-> Note : `emailBlacklisted: true` couvre à la fois les adresses invalides et les désinscrits dans Brevo.
 
 ---
 
@@ -132,7 +185,7 @@ Identique pour premier email et relance.
 
 **Relance (`numero_relance` = 1 ou 2) :**
 
-> ⚠️ **Ne jamais envoyer une relance si la colonne AH ou AI est vide dans le sheet.** Lire la valeur en temps réel. Si vide → SKIP immédiat sans modifier T, signaler à l'Orchestrateur.
+> ⚠️ **Ne jamais envoyer une relance si la colonne AH ou AI est vide dans le sheet.**
 
 | `numero_relance` | Colonne corps à vérifier | Si vide → signaler |
 |---|---|---|
@@ -159,32 +212,35 @@ Identique pour premier email et relance.
 
 ### ÉTAPE 6 — Calcul du scheduledAt
 
-Identique pour premier email et relance.
-
-Utiliser un **compteur d'envois réussis** (pas la position dans la liste) pour calculer le délai :
+Utiliser un **compteur d'envois réussis par sender** pour calculer le délai :
 
 ```
-emails_envoyés_session = 0  ← compteur initialisé à 0, incrémenté après chaque envoi réussi
+compteurs_par_sender = { sender_id: 0, ... }  ← un compteur par sender actif
 
-scheduledAt = date_base + SEND_TIME + (emails_envoyés_session × EMAIL_DELAY_MINUTES)
+scheduledAt = date_base + SEND_TIME + (compteurs_par_sender[sender.id] × EMAIL_DELAY_MINUTES)
 ```
 
 - `date_base` : aujourd'hui si heure actuelle < SEND_TIME, demain sinon
-- Les leads skippés n'incrémentent pas le compteur → pas de trous dans le planning
+- Les leads skippés n'incrémentent pas le compteur
+- Chaque sender a son propre compteur → les plannings sont indépendants quel que soit le nombre de senders
 - Si `$SEND_TIME` absent → ne pas inclure `scheduledAt` (envoi immédiat)
 
-**Exemple avec 2 leads skippés entre le lead 1 et le lead 2 :**
+**Exemple avec N senders actifs (généraliser à autant de senders que définis dans senders.json) :**
 ```
-Lead A (envoyé)  → emails_envoyés_session=0 → 09:00
-Lead B (skipé)   → compteur non incrémenté
-Lead C (skipé)   → compteur non incrémenté
-Lead D (envoyé)  → emails_envoyés_session=1 → 09:03
-Lead E (envoyé)  → emails_envoyés_session=2 → 09:06
+compteurs_par_sender = { sender.id: 0 pour chaque sender actif }
+
+Lead A → sender X → 09:00  (compteur[X] = 0, puis incrémenté à 1)
+Lead B → sender Y → 09:00  (compteur[Y] = 0, indépendant de X)
+Lead C → sender X → 09:03  (compteur[X] = 1, puis incrémenté à 2)
+Lead D → sender Y → 09:03  (compteur[Y] = 1)
+Lead E → sender Z → 09:00  (compteur[Z] = 0, si un 3ème sender existe)
 ```
 
 ---
 
 ### ÉTAPE 7 — Appel Brevo
+
+Utiliser les credentials du **sender sélectionné** pour ce lead.
 
 **Champ `subject` et `textContent` selon le scénario :**
 
@@ -201,10 +257,10 @@ Headers:
 
 Body:
 {
-  "sender": {"name": "$SENDER_NAME", "email": "$SENDER_EMAIL"},
+  "sender": {"name": "{sender.name}", "email": "{sender.email}"},
   "to": [{"email": "[email_prospect]", "name": "[Prénom Nom]"}],
   "subject": "[objet selon scénario ci-dessus]",
-  "textContent": "[corps selon scénario ci-dessus]\n\n--\n$SENDER_NAME\n$SENDER_TITLE\n$SENDER_WEBSITE",
+  "textContent": "[corps selon scénario ci-dessus]\n\n--\n{sender.name}\n{sender.title}\n{sender.website}",
   "scheduledAt": "[calculé à l'étape 6 — omettre si envoi immédiat]"
 }
 ```
@@ -223,23 +279,31 @@ Body:
 
 #### Premier email (`numero_relance` = 0)
 
-**Après succès — PUT sur `T{N}:X{N}` (5 valeurs exactes) :**
+**Après succès — deux PUT séparés :**
 
 ```bash
+# PUT 1 — Colonnes T:X (5 valeurs)
 curl -s -X PUT \
   "https://sheets.googleapis.com/v4/spreadsheets/$GSHEETS_SPREADSHEET_ID/values/$GSHEETS_SHEET_NAME!T{N}:X{N}?valueInputOption=USER_ENTERED" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"values": [["Email envoyé", "[date_scheduledAt]", "[objet]", "[corps SANS signature]", "[messageId]"]]}'
+
+# PUT 2 — Colonne AJ : compte_envoi (email du sender utilisé)
+curl -s -X PUT \
+  "https://sheets.googleapis.com/v4/spreadsheets/$GSHEETS_SPREADSHEET_ID/values/$GSHEETS_SHEET_NAME!AJ{N}?valueInputOption=USER_ENTERED" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"values": [["{sender.email}"]]}'
 ```
 
-> ⚠️ Toujours passer exactement 5 valeurs. Une valeur manquante décale toutes les colonnes suivantes.
+> ⚠️ Toujours passer exactement 5 valeurs dans le PUT 1. Une valeur manquante décale toutes les colonnes suivantes.
 > ⚠️ Écrire le corps **SANS signature** dans W — la signature est ajoutée à la volée dans `textContent`.
+> ⚠️ Toujours écrire `compte_envoi` dans AJ après chaque premier envoi réussi — cette colonne est la clé de routage pour toutes les relances futures.
 
 **Après échec :**
 
 ```bash
-# PUT uniquement sur T{N}
 curl -s -X PUT \
   "https://sheets.googleapis.com/v4/spreadsheets/$GSHEETS_SPREADSHEET_ID/values/$GSHEETS_SHEET_NAME!T{N}?valueInputOption=USER_ENTERED" \
   -H "Authorization: Bearer $TOKEN" \
@@ -251,7 +315,7 @@ curl -s -X PUT \
 
 **Après succès :**
 
-Deux PUT séparés — ne jamais toucher les colonnes U:X (premier email).
+Deux PUT séparés — ne jamais toucher les colonnes U:X ni AJ (déjà remplis lors du premier envoi).
 
 ```bash
 # 1. Remettre T = "Email envoyé" (lève le verrou "En cours d'envoi")
@@ -279,7 +343,6 @@ curl -s -X PUT \
 **Après échec :**
 
 ```bash
-# Remettre T = "Email envoyé" (annuler le verrou — le statut ne doit pas rester "En cours d'envoi")
 curl -s -X PUT \
   "https://sheets.googleapis.com/v4/spreadsheets/$GSHEETS_SPREADSHEET_ID/values/$GSHEETS_SHEET_NAME!T{N}?valueInputOption=USER_ENTERED" \
   -H "Authorization: Bearer $TOKEN" \
@@ -293,7 +356,7 @@ curl -s -X PUT \
 
 | Situation | Statut T | Colonnes à mettre à jour |
 |---|---|---|
-| Premier email réussi | `"Email envoyé"` | U, V, W, X |
+| Premier email réussi | `"Email envoyé"` | U, V, W, X + **AJ** |
 | Relance 1 réussie | `"Email envoyé"` | AC (`date_relance_1`) uniquement |
 | Relance 2 réussie | `"Email envoyé"` | AD (`date_relance_2`) uniquement |
 | Déjà contacté (Brevo — premier email) | `"Déjà contacté"` | Aucune |
@@ -301,8 +364,8 @@ curl -s -X PUT \
 | Email invalide / objet / corps manquant | `"Email invalide"` | Aucune |
 | Score < $ICP_SCORE_MINIMUM | `"Score insuffisant"` | Aucune |
 | Erreur 4xx Brevo (autre) | `"Erreur envoi"` | Aucune (premier email seulement) |
+| Erreur 5xx — 1ère tentative | `"Nouveau"` (premier email) / `"Email envoyé"` (relance) ← seul cas réversible | Aucune |
 | Erreur 5xx après 2 tentatives | `"Erreur envoi"` (premier email) / `"Email envoyé"` (relance) | Aucune |
-| Erreur 5xx (1ère tentative) | `"Nouveau"` (premier email) / `"Email envoyé"` (relance) ← seul cas réversible | Aucune |
 
 ---
 
@@ -319,12 +382,18 @@ curl -s -X PUT \
     "doublon_sheet": 0
   },
   "emails_echoues": 0,
-  "quota_restant_jour": 0,
+  "quota_par_sender": {
+    "{sender.id}": {
+      "envoyes": "{nombre d'emails envoyés avec succès par ce sender durant la session}",
+      "restant": "{sender.max_emails_par_jour - total envoyés aujourd'hui par ce sender}"
+    }
+  },
   "detail": [
     {
       "id_lead": "",
       "entreprise": "",
       "email_destinataire": "",
+      "sender_utilise": "",
       "statut_envoi": "envoyé | déjà contacté | bloqué — blacklist | email invalide | score insuffisant | erreur envoi",
       "scheduled_at": "",
       "id_message_brevo": "",
@@ -344,3 +413,4 @@ curl -s -X PUT \
 - Tu n'envoies jamais sans instruction explicite de l'Orchestrateur
 - Pour les **premiers emails** : tu ne lis jamais une liste pré-construite — tu filtres toi-même `statut_lead = "Nouveau"` depuis le sheet en temps réel
 - Pour les **relances** : tu acceptes la liste JSON validée par l'utilisateur transmise par l'Orchestrateur, mais tu relis toujours le sheet en temps réel à l'ÉTAPE 1 pour confirmer l'éligibilité avant chaque envoi
+- Tu ne choisis jamais un sender différent de celui enregistré en AJ pour une relance

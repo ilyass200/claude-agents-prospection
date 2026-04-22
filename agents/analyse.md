@@ -35,6 +35,10 @@ Leads relance 2     = date_relance_2 vide ET date_relance_1 < aujourd'hui - $REL
 Leads froids        = date_relance_2 renseignée ET statut_lead = "Email envoyé" (2 relances épuisées — plus de contact)
 ```
 
+Ces KPIs sont calculés **deux fois** : une fois global, une fois ventilés par sender (colonne AJ).
+
+> Pour les leads relance 1 et relance 2, toujours inclure la valeur de la colonne AJ (`compte_envoi`) dans la liste transmise à l'Agent Relance — il en a besoin pour router vers le bon sender.
+
 ---
 
 ## Paramètres reçus de l'Orchestrateur
@@ -59,13 +63,16 @@ Leads froids        = date_relance_2 renseignée ET statut_lead = "Email envoyé
 | Prénom Nom | Entreprise | Score ICP | Statut | Action recommandée |
 
 ### Leads à relancer — éligibles
-| Prénom Nom | Entreprise | Email | row_sheet | Date envoi | Type de relance recommandé |
+| Prénom Nom | Entreprise | Email | row_sheet | compte_envoi | Date envoi | Type de relance recommandé |
 
 ### Leads à archiver
 | Prénom Nom | Entreprise | Motif |
 
 ### Performance par secteur
 | Secteur | Envoyés | Réponses | Taux de réponse |
+
+### Performance par sender
+| Sender (compte_envoi) | Envoyés | Réponses | Taux de réponse | Relances en attente |
 
 ### Recommandations
 [Ce qui fonctionne, ce qui ne fonctionne pas, ajustements suggérés]
