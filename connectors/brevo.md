@@ -10,8 +10,10 @@ Brevo est la plateforme d'envoi d'emails utilisée par l'Agent Envoi. Ce fichier
 
 ```
 BASE_URL : https://api.brevo.com/v3
-CLE_API  : $BREVO_API_KEY  ← définie dans prospection-team/.env
+CLE_API  : $BREVO_API_KEY  ← clé unique partagée par tous les senders, définie dans .env
 ```
+
+> Tous les senders (adresses expéditrices) sont vérifiés sur le **même compte Brevo**. La clé API est donc unique et globale — seul le champ `sender` (name + email) change d'un sender à l'autre dans le body des appels.
 
 ---
 
@@ -31,8 +33,8 @@ Headers:
 Body:
 {
   "sender": {
-    "name": "$SENDER_NAME",
-    "email": "$SENDER_EMAIL"
+    "name": "{sender.name}",
+    "email": "{sender.email}"
   },
   "to": [
     {
@@ -184,7 +186,7 @@ Headers:
 - Toujours envoyer en **texte brut** pour la prospection à froid
 - Éviter les mots spam : "gratuit", "offre limitée", "urgent", "cliquez ici"
 - Espacer les envois de 2 à 5 minutes entre chaque email
-- Maximum $MAX_EMAILS_PAR_JOUR emails/jour en démarrage (warm-up du domaine)
+- Maximum `sender.max_emails_par_jour` emails/jour par sender en démarrage (warm-up du domaine)
 
 ---
 
@@ -195,7 +197,7 @@ Headers:
 | Semaine 1 | 10/jour |
 | Semaine 2 | 20/jour |
 | Semaine 3 | 35/jour |
-| Semaine 4+ | $MAX_EMAILS_PAR_JOUR max |
+| Semaine 4+ | `sender.max_emails_par_jour` max (défini dans `senders.json`) |
 
 ---
 

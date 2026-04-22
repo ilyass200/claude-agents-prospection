@@ -97,7 +97,7 @@ curl -s -X POST \
       "Secteur",        "200",         "5000000",      "10 ans",
       "France",         "Paris",       "site.com",     "85",
       "HOT",            "À analyser",  "Signal détecté","Nouveau",
-      "","","","","","0","","","","","","Envoyer email","2026-04-04","",""
+      "","","","","","0","","","","","","Envoyer email","2026-04-04","","",""
     ]]
   }'
 ```
@@ -114,9 +114,9 @@ Utilisé par : Agent Envoi (après envoi), Agent Analyse & Relance (après relan
 Pour mettre à jour une ligne, il faut d'abord connaître son numéro de ligne dans le Sheet (via Endpoint 1), puis cibler la plage exacte.
 
 ```bash
-# Exemple : mettre à jour la ligne 3 (LEAD-005) après envoi
+# Exemple : mettre à jour la ligne 3 (LEAD-005) après envoi du premier email
 curl -s -X PUT \
-  "https://sheets.googleapis.com/v4/spreadsheets/$GSHEETS_SPREADSHEET_ID/values/$GSHEETS_SHEET_NAME!U3:Y3?valueInputOption=USER_ENTERED" \
+  "https://sheets.googleapis.com/v4/spreadsheets/$GSHEETS_SPREADSHEET_ID/values/$GSHEETS_SHEET_NAME!T3:X3?valueInputOption=USER_ENTERED" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,6 +129,8 @@ curl -s -X PUT \
     ]]
   }'
 ```
+
+> T = statut_lead · U = date_premier_contact · V = objet_email_envoye · W = corps_email · X = id_message_brevo
 
 > Pour retrouver le numéro de ligne d'un lead : lire toutes les lignes (Endpoint 1) et chercher l'`id_lead` dans la colonne A. La position dans le tableau + 1 (pour l'en-tête) = numéro de ligne dans le Sheet.
 
@@ -177,17 +179,18 @@ curl -s -X PUT \
 | 22 | objet_email_envoye | V | Enrichissement (rédigé) → Envoi (confirmé à l'envoi) |
 | 23 | corps_email | W | Enrichissement |
 | 24 | id_message_brevo | X | Envoi |
-| 25 | date_ouverture | Y | Analyse & Relance |
-| 26 | nombre_ouvertures | Z | Analyse & Relance |
-| 27 | date_reponse | AA | Analyse & Relance |
-| 28 | contenu_reponse | AB | Analyse & Relance |
-| 29 | date_relance_1 | AC | Analyse & Relance |
-| 30 | date_relance_2 | AD | Analyse & Relance |
+| 25 | date_ouverture | Y | ⚠️ Désactivé (pixels bloqués Gmail/Outlook) |
+| 26 | nombre_ouvertures | Z | ⚠️ Désactivé (pixels bloqués Gmail/Outlook) |
+| 27 | date_reponse | AA | Fetch Replies |
+| 28 | contenu_reponse | AB | Fetch Replies |
+| 29 | date_relance_1 | AC | Envoi |
+| 30 | date_relance_2 | AD | Envoi |
 | 31 | notes | AE | Manuel |
 | 32 | prochaine_action | AF | Orchestrateur |
 | 33 | date_prochaine_action | AG | Orchestrateur |
 | 34 | corps_relance_1 | AH | Relance |
 | 35 | corps_relance_2 | AI | Relance |
+| 36 | **compte_envoi** | **AJ** | **Envoi** — email du sender qui a envoyé le 1er contact |
 
 ---
 
