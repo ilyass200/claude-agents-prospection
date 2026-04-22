@@ -1,0 +1,6 @@
+# Ne jamais versionner les clés API
+.env
+credentials/
+
+# Fichiers système
+.DS_Store
