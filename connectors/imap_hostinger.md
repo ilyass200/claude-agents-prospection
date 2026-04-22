@@ -2,33 +2,45 @@
 
 ## Présentation
 
-Ce connecteur permet de lire les emails entrants depuis la boîte mail Hostinger (`$IMAP_EMAIL`). Il est utilisé exclusivement par l'**Agent Fetch Replies** pour détecter les réponses des prospects et mettre à jour le tracking Google Sheets.
+Ce connecteur permet de lire les emails entrants depuis **les boîtes mail de tous les senders actifs**. Il est utilisé exclusivement par l'**Agent Fetch Replies** pour détecter les réponses des prospects et mettre à jour le tracking Google Sheets. Une connexion IMAP distincte est établie pour chaque sender défini dans `senders.json`.
 
 ---
 
 ## Configuration
 
+Les credentials IMAP ne sont plus des variables globales — chaque sender a les siennes, résolues depuis `senders.json` + `.env` par l'Orchestrateur avant de les transmettre à l'Agent Fetch Replies.
+
 ```
-IMAP_HOST     : imap.hostinger.com
-IMAP_PORT     : 993 (SSL/TLS)
-IMAP_EMAIL    : $IMAP_EMAIL    ← défini dans prospection-team/.env
-IMAP_PASSWORD : $IMAP_PASSWORD ← défini dans prospection-team/.env
+imap_host     : sender.imap_host     ← défini dans senders.json
+imap_port     : sender.imap_port     ← défini dans senders.json (défaut 993)
+imap_email    : sender.imap_email    ← défini dans senders.json
+imap_password : sender.imap_password ← résolu depuis la variable nommée dans sender.imap_password_var (.env)
 ```
+
+> ⚠️ Il n'existe plus de variables `$IMAP_EMAIL` / `$IMAP_PASSWORD` globales dans `.env`. Le code Python doit recevoir ces credentials en paramètres, pas les lire depuis `os.environ`.
 
 ---
 
 ## Connexion IMAP
 
+Les credentials sont passés en paramètres (résolus depuis `senders.json` par l'Orchestrateur).
+
 ```python
-import imaplib, email, os
+import imaplib, email
 from email.header import decode_header
 
-imap = imaplib.IMAP4_SSL(os.environ["IMAP_HOST"], int(os.environ["IMAP_PORT"]))
-imap.login(os.environ["IMAP_EMAIL"], os.environ["IMAP_PASSWORD"])
-imap.select("INBOX")
+def connect_imap(imap_host, imap_port, imap_email, imap_password):
+    """Connexion IMAP pour un sender donné. Retourne l'objet imap connecté."""
+    imap = imaplib.IMAP4_SSL(imap_host, int(imap_port))
+    imap.login(imap_email, imap_password)
+    imap.select("INBOX")
+    return imap
+
+# Exemple d'appel depuis l'Agent Fetch Replies :
+# imap = connect_imap(sender.imap_host, sender.imap_port, sender.imap_email, sender.imap_password)
 ```
 
-> ⚠️ Toujours appeler `imap.logout()` en fin de session.
+> ⚠️ Toujours appeler `imap.logout()` en fin de session pour chaque sender.
 
 ---
 
@@ -187,7 +199,7 @@ curl -s -X PUT \
 
 | Erreur | Cause | Action |
 |---|---|---|
-| `IMAP4.error: LOGIN failed` | Mauvais identifiants | Vérifier `IMAP_EMAIL` et `IMAP_PASSWORD` dans `.env` |
-| `ConnectionRefusedError` | Mauvais host/port | Vérifier `IMAP_HOST=imap.hostinger.com` et `IMAP_PORT=993` |
+| `IMAP4.error: LOGIN failed` | Mauvais identifiants | Vérifier `imap_email` et `imap_password_var` dans `senders.json` + la valeur correspondante dans `.env` |
+| `ConnectionRefusedError` | Mauvais host/port | Vérifier `imap_host` et `imap_port` dans `senders.json` (défaut : `imap.hostinger.com` / `993`) |
 | `ssl.SSLError` | SSL non supporté | Utiliser `IMAP4_SSL` (déjà le cas ici) |
 | `[AUTHENTICATIONFAILED]` | 2FA activé | Générer un mot de passe d'application dans hPanel Hostinger |
