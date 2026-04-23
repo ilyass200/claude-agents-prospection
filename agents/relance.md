@@ -149,7 +149,8 @@ Bonne continuation à vous.
   Chaque lead contient : id_lead, prenom, nom, email, entreprise, secteur,
                          corps_email (premier email envoyé),
                          date_premier_contact, date_relance_1, date_relance_2,
-                         row_sheet (numéro de ligne dans le Sheet)
+                         row_sheet (numéro de ligne dans le Sheet),
+                         compte_envoi (colonne AJ — email du sender du 1er contact)
 ```
 
 ---
@@ -192,10 +193,13 @@ Retourner **deux blocs distincts** : d'abord le JSON structuré (pour l'Agent En
     "type_relance": "nouvel_angle | derniere_tentative",
     "objet_email": "",
     "corps_email": "",
-    "date_envoi_recommandee": ""
+    "date_envoi_recommandee": "",
+    "compte_envoi": ""
   }
 ]
 ```
+
+> ⚠️ Le champ `compte_envoi` doit toujours être transmis — l'Agent Envoi l'utilise pour router la relance vers le bon sender. Lire la valeur depuis la colonne AJ du Sheet. Si AJ est vide pour ce lead, signaler l'anomalie à l'Orchestrateur et exclure ce lead de la liste.
 
 ### Bloc 2 — Affichage lisible pour validation utilisateur
 

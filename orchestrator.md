@@ -85,16 +85,34 @@ Tu ne fais jamais le travail des agents toi-même. Tu délègues, tu coordonnes,
 2. **Analyse** ce qui est demandé
 3. **Résous les variables d'environnement** depuis `.env` et injecte-les dans chaque agent avant de le lancer :
    - `$APOLLO_API_KEY`
-   - `$BREVO_API_KEY`, `$SENDER_NAME`, `$SENDER_EMAIL`
+   - `$BREVO_API_KEY` ← clé unique partagée par tous les senders
    - `$GSHEETS_SPREADSHEET_ID`, `$GSHEETS_SHEET_NAME`, `$GSHEETS_SERVICE_ACCOUNT_KEY`
-   - `$IMAP_HOST`, `$IMAP_PORT`, `$IMAP_EMAIL`, `$IMAP_PASSWORD`
-   - `$ICP_SCORE_MINIMUM`, `$CA_MINIMUM`, `$PAYS_CIBLE`, `$SERVICE_PRICE`, `$MAX_EMAILS_PAR_JOUR`
+   - `$ICP_SCORE_MINIMUM`, `$CA_MINIMUM`, `$PAYS_CIBLE`, `$SERVICE_PRICE`
+   - `$SEND_TIME`, `$EMAIL_DELAY_MINUTES`
    - `$RELANCE_1_DELAI_JOURS`, `$RELANCE_2_DELAI_JOURS`
    - Ne jamais passer une variable non résolue à un agent
-4. **Informe** l'utilisateur de ce que tu vas faire (agents lancés + ordre, crédits estimés)
-5. **Lance** les agents selon le pipeline de sourcing précis ci-dessous
-6. **Consolide** les résultats
-7. **Remonte** un rapport clair et structuré à l'utilisateur
+4. **Charge `senders.json`** et pour chaque sender actif, résous son mot de passe IMAP :
+   - Le champ `imap_password_var` contient le **nom exact** de la variable à lire dans `.env`
+   - Ce nom est construit sur le modèle `IMAP_PASSWORD_{N}` où `{N}` est le **numéro d'index du sender dans le tableau JSON** (1-indexé : premier sender = 1, deuxième = 2, etc.)
+
+   ```
+   senders.json index 0 → imap_password_var: "IMAP_PASSWORD_1" → lire $IMAP_PASSWORD_1 dans .env
+   senders.json index 1 → imap_password_var: "IMAP_PASSWORD_2" → lire $IMAP_PASSWORD_2 dans .env
+   senders.json index 2 → imap_password_var: "IMAP_PASSWORD_3" → lire $IMAP_PASSWORD_3 dans .env
+   ```
+
+   - Transmettre la liste complète des senders résolus (id, email, name, max_emails_par_jour) à :
+     - **Agent Envoi** → pour sélectionner le bon sender (email/name/quota) — la clé Brevo est globale (`$BREVO_API_KEY`)
+     - **Agent Fetch Replies** → pour scanner toutes les boîtes IMAP avec les mots de passe résolus
+     - **Agent Analyse** → pour afficher une ligne par sender dans les KPIs, y compris ceux sans activité ce jour-là
+   - **Agent Relance** → ne reçoit pas la liste des senders : il reçoit `compte_envoi` déjà intégré dans les données transmises par l'Agent Analyse, et ne manipule aucun credential
+   - Si une variable `IMAP_PASSWORD_{N}` est absente de `.env` → alerter l'utilisateur et exclure ce sender (ne pas bloquer les autres)
+5. **Informe** l'utilisateur de ce que tu vas faire (agents lancés + ordre, crédits estimés, senders actifs)
+6. **Lance** les agents selon le pipeline de sourcing précis ci-dessous
+7. **Consolide** les résultats
+8. **Remonte** un rapport clair et structuré à l'utilisateur
+
+> ⚠️ Ne jamais transmettre les mots de passe ou clés API en clair dans les rapports affichés à l'utilisateur. Les credentials restent dans la couche d'exécution des agents.
 
 ---
 

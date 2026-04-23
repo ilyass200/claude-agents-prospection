@@ -66,17 +66,17 @@ Un site qui reflète fidèlement le positionnement premium de l'entreprise, gén
 **Immobilier & Promotion immobilière**
 - Pourquoi : Dans l'immobilier, la première impression est décisive. Un acheteur ou locataire visite le site avant de visiter le bien. Un site premium crée un sentiment de confiance et filtre naturellement vers une clientèle plus qualifiée. Les agences haut de gamme et promoteurs ne peuvent pas se permettre une vitrine digitale banale.
 - Signaux forts : Agence récemment ouverte, portefeuille de biens haut de gamme, site vieillissant ou inexistant, expansion géographique
-- Mots-clés Apollo : `"real estate"`
+- Tag ID Apollo : `5567cd477369645401010000` (dans `organization_industry_tag_ids`)
 
 **Hôtellerie & Restauration haut de gamme**
 - Pourquoi : L'expérience client commence en ligne avant même l'arrivée. Un site médiocre tue la perception de luxe avant que le client n'ait mis un pied dans l'établissement. Le site est le premier service rendu.
 - Signaux forts : Hôtel/restaurant récemment rénové ou ouvert, montée en gamme de l'établissement, site qui ne correspond plus au niveau actuel
-- Mots-clés Apollo : `"hospitality"`, `"restaurants"`
+- Tag IDs Apollo : `5567ce9d7369643bc19c0000` (hospitality), `5567e0e0736964198de70700` (restaurants)
 
 **Luxe, Mode & Lifestyle premium**
 - Pourquoi : L'image est le produit. Dans le luxe, un site quelconque discrédite instantanément la marque. Le design du site doit incarner le même niveau d'exigence que le produit vendu.
 - Signaux forts : Nouveau produit ou collection, présence internationale, site actuel générique ou incohérent avec le positionnement
-- Mots-clés Apollo : `"luxury goods & jewelry"`, `"apparel & fashion"`
+- Tag IDs Apollo : `5567cda97369644cfd3e0000` (luxury goods & jewelry) — `apparel & fashion` : tag ID non encore validé, utiliser `luxury goods & jewelry`
 
 ---
 
@@ -85,17 +85,17 @@ Un site qui reflète fidèlement le positionnement premium de l'entreprise, gén
 **Cabinets de Conseil & Services B2B**
 - Pourquoi : Le site est le premier vecteur de crédibilité pour un cabinet. Avant le premier rendez-vous, le prospect juge la valeur du cabinet à travers son site. Un design premium signale une expertise premium.
 - Signaux forts : Cabinet en croissance, recrutement de consultants seniors, site daté ou sans cohérence avec le positionnement tarifaire
-- Mots-clés Apollo : `"management consulting"`, `"business consulting"`
+- Tag IDs Apollo : `5567cdd47369643dbf260000` (management consulting) — `business consulting` : tag ID non encore validé, utiliser `management consulting`
 
 **Professions libérales (avocats, architectes, notaires, experts-comptables)**
 - Pourquoi : La confiance est le premier actif d'une profession libérale. Un site premium installe cette confiance avant même le premier contact. Les clients premium de ces professions s'attendent à une image à leur hauteur.
 - Signaux forts : Cabinet en développement, nouveau associé, spécialisation dans un segment haut de gamme, site vieillissant
-- Mots-clés Apollo : `"legal services"`, `"architecture & planning"`, `"accounting"`
+- Tag IDs Apollo : `5567ce1f7369643b78570000` (accounting) — `legal services` et `architecture & planning` : tag IDs non encore validés, utiliser `accounting`
 
 **E-commerce établi**
 - Pourquoi : Dans un marché saturé, l'expérience utilisateur et le design sont des leviers directs de conversion. Un site premium augmente la valeur perçue des produits et réduit les abandons de panier.
 - Signaux forts : Marque avec des produits bien notés mais site basique, volonté de monter en gamme, concurrence forte avec des acteurs au design soigné
-- Mots-clés Apollo : `"retail"`, `"consumer goods"`
+- Tag IDs Apollo : `5567ced173696450cb580000` (retail) — `consumer goods` : tag ID non encore validé, utiliser `retail`
 
 ---
 
@@ -104,7 +104,7 @@ Un site qui reflète fidèlement le positionnement premium de l'entreprise, gén
 **Formation & Coaching premium**
 - Pourquoi : L'autorité d'un formateur ou coach se construit en ligne. Un site professionnel et bien conçu renforce la légitimité et justifie des tarifs élevés.
 - Signaux forts : Formateur avec forte présence sur les réseaux mais site négligé, lancement d'une nouvelle offre, repositionnement tarifaire vers le haut
-- Mots-clés Apollo : `"e-learning"`, `"professional training & coaching"`
+- Tag IDs Apollo : `5567e19c7369641c48e70100` (e-learning), `5567cd49736964541d010000` (professional training & coaching)
 
 ---
 
