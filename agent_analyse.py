@@ -399,8 +399,8 @@ def run_analyse(token):
             jours_depuis_contact = (TODAY - d_contact).days
 
             if not date_relance_1:
-                # Éligible relance 1 si > R1_DELAI jours depuis envoi
-                if jours_depuis_contact >= R1_DELAI:
+                # Éligible relance 1 si > R1_DELAI jours depuis envoi et compte_envoi renseigné
+                if jours_depuis_contact >= R1_DELAI and compte_envoi:
                     a_relancer_1.append({
                         'name': name, 'entreprise': entreprise, 'email': email,
                         'row': row_num, 'id': id_lead, 'compte_envoi': compte_envoi,
@@ -415,7 +415,7 @@ def run_analyse(token):
                 try:
                     d_r1 = date.fromisoformat(date_relance_1[:10])
                     jours_depuis_r1 = (TODAY - d_r1).days
-                    if jours_depuis_r1 >= R2_DELAI:
+                    if jours_depuis_r1 >= R2_DELAI and compte_envoi:
                         a_relancer_2.append({
                             'name': name, 'entreprise': entreprise, 'email': email,
                             'row': row_num, 'id': id_lead, 'compte_envoi': compte_envoi,
