@@ -126,6 +126,9 @@ INITIALISATION
   leads_confirmés = 0
   page = 1
   entreprises_déjà_dans_sheet = lire colonne H via connectors/gsheets.md → Endpoint 1
+    → Générer le token GSheets en Python direct (jwt + credentials/gsheets_key.json)
+    → NE PAS utiliser `source .env` + curl (les espaces dans les valeurs .env cassent le token)
+    → Stocker le résultat en mémoire — ne PAS relire le sheet à chaque lead
 
 BOUCLE PRINCIPALE — répéter tant que leads_confirmés < nombre_leads
 
@@ -133,26 +136,46 @@ BOUCLE PRINCIPALE — répéter tant que leads_confirmés < nombre_leads
     batch = apollo_search(page=page, per_page=25)
     Si batch vide → STOP (plus de résultats disponibles)
 
-  ÉTAPE B — Pour chaque lead du batch
-    1. Déduplique : si lead.entreprise est dans entreprises_déjà_dans_sheet → SKIP
-    2. Score ICP avec les données masquées (voir Agent ICP Score)
-       → Les données visibles suffisent : industry, num_employees, annual_revenue, founded_year, website_url
-       → 0 crédit utilisé ici
-    3. Si score < ICP_SCORE_MINIMUM → SKIP (ne pas révéler, ne pas gaspiller de crédit)
-    4. Révèle l'email via apollo people/match (1 crédit)
-    5. Si email absent ou vide après révélation → SKIP
-    6. Ajoute le lead dans Google Sheets (Agent ICP Score → Endpoint 2)
-    7. Lance l'enrichissement et la rédaction email (Agent Enrichissement)
-    8. leads_confirmés += 1
-    9. Ajoute entreprise à entreprises_déjà_dans_sheet
-    10. Si leads_confirmés == nombre_leads → STOP IMMÉDIAT
+  ÉTAPE B — Pour chaque lead du batch (ORDRE STRICT — ne pas sauter d'étape)
+
+    ── ÉTAPE B.1 : DÉDUPLICATION (0 crédit) ──────────────────────────────
+    Si lead.organization.name (normalisé lowercase) est dans entreprises_déjà_dans_sheet
+    → SKIP immédiat, passer au lead suivant, 0 crédit dépensé
+
+    ── ÉTAPE B.2 : PRÉ-SCORE SUR DONNÉES MASQUÉES (0 crédit) ─────────────
+    ⚠️ À ce stade, les seules données disponibles sont des FLAGS BOOLÉENS :
+       - has_employee_count, has_revenue (pas de valeurs réelles)
+       - Le secteur est connu via le tag_id utilisé dans la recherche
+
+    Appliquer la règle de pré-qualification définie dans connectors/apollo.md :
+      • Secteur haute priorité (Immobilier, Hôtellerie, Restauration, Luxe)
+        → autoriser la révélation
+      • Secteur moyen/bas ET has_revenue = true
+        → autoriser la révélation
+      • Secteur moyen/bas ET has_revenue = false
+        → SKIP, 0 crédit
+
+    ── ÉTAPE B.3 : RÉVÉLATION EMAIL (1 crédit) ───────────────────────────
+    Appeler apollo people/match avec l'ID du lead
+    → Coûte 1 crédit — irréversible
+
+    ── ÉTAPE B.4 : SCORE ICP COMPLET (0 crédit) ──────────────────────────
+    Scorer avec les données complètes révélées (Agent ICP Score)
+    Si score < $ICP_SCORE_MINIMUM → SKIP (crédit dépensé mais lead non ajouté)
+    Si email absent ou vide → SKIP
+
+    ── ÉTAPE B.5 : ÉCRITURE ET COMPTAGE ──────────────────────────────────
+    Ajouter le lead dans Google Sheets (Agent ICP Score → Endpoint 2)
+    Ajouter lead.entreprise à entreprises_déjà_dans_sheet
+    leads_confirmés += 1
+    Si leads_confirmés == nombre_leads → STOP IMMÉDIAT
 
   page += 1
 
 FIN — Rapport avec leads_confirmés leads dans le sheet
 ```
 
-**Règle d'or :** On ne révèle jamais un email avant d'avoir scoré le lead. On s'arrête dès que le quota est atteint. Chaque crédit dépensé correspond à un lead confirmé dans le sheet.
+**Règle d'or :** 1 crédit = 1 lead qui a passé déduplication + pré-score. On ne révèle jamais à l'aveugle, jamais en batch, jamais sans avoir vérifié le sheet avant. On s'arrête dès que le quota est atteint.
 
 ---
 

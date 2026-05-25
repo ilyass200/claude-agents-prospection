@@ -110,9 +110,59 @@ Body:
 
 ---
 
+## Règle obligatoire avant toute révélation — Pré-qualification sur données masquées
+
+> ⛔ **NE JAMAIS appeler `people/match` sans avoir vérifié les deux conditions ci-dessous.**
+> Chaque appel coûte 1 crédit. Un crédit dépensé sur un lead non qualifié ou déjà dans le sheet est un crédit perdu définitivement.
+
+### Condition 1 — Déduplication (0 crédit)
+
+Avant tout, vérifier que l'entreprise n'est **pas déjà présente dans Google Sheets** :
+- Lire la colonne H (entreprise) via `connectors/gsheets.md` → Endpoint 1 **une seule fois au début** et stocker la liste en mémoire
+- Comparer `organization.name` (retourné par `api_search`) avec cette liste
+- Si l'entreprise est déjà dans le sheet → **SKIP, 0 crédit, passer au suivant**
+
+### Condition 2 — Pré-score sur données masquées (0 crédit)
+
+Les données disponibles dans la réponse `api_search` sont **limitées** (flags booléens uniquement — pas de valeurs réelles) :
+
+| Champ disponible | Ce qu'il indique |
+|---|---|
+| `organization.name` | Nom de l'entreprise |
+| `organization.has_employee_count` | Apollo a des données sur la taille |
+| `organization.has_revenue` | Apollo a des données sur le CA |
+| Secteur | **Connu implicitement** depuis le `organization_industry_tag_id` utilisé dans le filtre |
+
+> ⚠️ `industry`, `annual_revenue`, `estimated_num_employees`, `founded_year`, `website_url` **ne sont PAS disponibles** dans la réponse `api_search`. Ces champs n'arrivent qu'après révélation via `people/match`.
+
+**Règle de pré-score — appliquer dans cet ordre :**
+
+```
+SI secteur = tag haute priorité (Immobilier, Hôtellerie, Restauration, Luxe → 25 pts ICP)
+  → RÉVÉLER (secteur seul suffit à valider l'intérêt)
+
+SINON SI secteur = tag priorité moyenne (Conseil, Comptabilité, Retail → 20 pts ICP)
+  ET has_revenue = true
+  → RÉVÉLER (revenue data existe → scoring réel possible après révélation)
+
+SINON SI secteur = tag basse priorité (E-learning, Formation → 15 pts ICP)
+  ET has_revenue = true
+  → RÉVÉLER seulement si le quota n'est pas encore atteint
+
+SINON
+  → SKIP, 0 crédit
+```
+
+**Résumé :**
+- Secteur haute priorité → toujours révéler (vaut le crédit)
+- Secteur moyen/bas sans `has_revenue: true` → jamais révéler (trop risqué)
+
+---
+
 ## Endpoint 2 — Révélation d'un contact `POST /api/v1/people/match`
 
-Appeler cet endpoint pour chaque ID récupéré à l'étape 1. Coûte **1 crédit/contact**.
+> ⛔ N'appeler cet endpoint **que si les deux conditions de pré-qualification ci-dessus sont remplies**.
+> Coûte **1 crédit/contact** — irreversible.
 
 ```json
 POST https://api.apollo.io/api/v1/people/match
@@ -150,8 +200,11 @@ Body:
 }
 ```
 
-> ⚠️ Appeler uniquement pour les leads ayant passé le scoring ICP (≥ $ICP_SCORE_MINIMUM)
-> pour ne pas gaspiller de crédits sur des leads non qualifiés
+**Après révélation — vérifications immédiates avant de compter le lead :**
+1. Email présent et non vide → sinon SKIP
+2. Scorer avec les données complètes (Agent ICP Score)
+3. Si score < $ICP_SCORE_MINIMUM → lead rejeté (crédit dépensé mais lead non ajouté au sheet)
+4. Si score ≥ $ICP_SCORE_MINIMUM → ajouter au sheet
 
 ---
 
