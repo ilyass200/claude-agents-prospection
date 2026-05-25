@@ -96,12 +96,39 @@ Toutes les instructions techniques d'appel API sont dans `connectors/apollo.md`.
 
 ---
 
-## Règles de qualité
+## Règles de qualité — ORDRE STRICT À RESPECTER
 
-- Retourne les leads avec les données masquées — ne pas révéler les emails au stade du fetch
-- Maximum 1 contact par entreprise (le plus décisionnaire)
-- Déduplique les entreprises déjà présentes dans Google Sheets — lire la colonne `entreprise` via `connectors/gsheets.md` → Endpoint 1 avant de traiter un lead
-- Ne jamais pré-charger plusieurs pages à l'avance — fournir page par page à la demande de l'Orchestrateur
+> ⛔ Ces règles ne sont pas optionnelles. Chaque étape doit être respectée dans l'ordre exact.
+> Ne pas respecter cet ordre = crédits Apollo gaspillés définitivement.
+
+### Avant la première page
+1. **Lire le Google Sheet une seule fois** (colonne H, toutes les lignes) via `connectors/gsheets.md` → Endpoint 1
+   - Générer le token GSheets en Python direct (`jwt` + `credentials/gsheets_key.json`)
+   - **Ne pas** utiliser `source .env` + curl (les espaces dans les valeurs .env cassent la génération du token)
+   - Stocker la liste des entreprises en mémoire — ne pas relire le sheet à chaque lead
+
+### Pour chaque lead dans la page (dans cet ordre — ne jamais inverser)
+
+**Étape 1 — Déduplication (0 crédit)**
+- Normaliser `organization.name` en lowercase, sans espaces superflus
+- Si l'entreprise est déjà dans la liste du sheet → **SKIP immédiat**
+- Si deux leads de la même page ont la même entreprise → garder le plus décisionnaire, SKIP le doublon
+
+**Étape 2 — Pré-qualification sur données masquées (0 crédit)**
+- Voir la règle complète dans `connectors/apollo.md` → section "Règle obligatoire avant toute révélation"
+- Rappel : `industry`, `annual_revenue`, `estimated_num_employees`, `founded_year` **ne sont pas disponibles** à ce stade
+- Seuls `has_employee_count` et `has_revenue` (booléens) sont disponibles
+- Le secteur est connu via le tag_id utilisé dans le filtre de recherche
+- Si les conditions de pré-qualification ne sont pas remplies → **SKIP, 0 crédit**
+
+**Étape 3 — Révélation (1 crédit)**
+- Appeler `people/match` **uniquement** si étapes 1 et 2 sont passées
+- **Une révélation à la fois** — ne jamais révéler plusieurs leads en parallèle ou en batch
+- Après révélation : si email absent ou vide → SKIP (crédit perdu, passer au suivant)
+
+**Étape 4 — Transmission à l'Orchestrateur**
+- Transmettre le lead complet révélé à l'Orchestrateur pour scoring ICP et ajout au sheet
+- Ajouter l'entreprise à la liste de déduplication en mémoire
 
 ---
 
