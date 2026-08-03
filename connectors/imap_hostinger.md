@@ -8,7 +8,7 @@ Ce connecteur permet de lire les emails entrants depuis **les boîtes mail de to
 
 ## Configuration
 
-Les credentials IMAP ne sont plus des variables globales — chaque sender a les siennes, résolues depuis `senders.json` + `.env` par l'Orchestrateur avant de les transmettre à l'Agent Fetch Replies.
+Les credentials IMAP sont stockés uniquement dans `senders.json` — il n'existe pas de variables globales `$IMAP_EMAIL` / `$IMAP_PASSWORD` dans `.env`. Chaque sender y définit sa configuration complète ; seule la valeur du mot de passe (référencée par nom via `imap_password_var`) est lue dans `.env`.
 
 ```
 imap_host     : sender.imap_host     ← défini dans senders.json
@@ -17,7 +17,7 @@ imap_email    : sender.imap_email    ← défini dans senders.json
 imap_password : sender.imap_password ← résolu depuis la variable nommée dans sender.imap_password_var (.env)
 ```
 
-> ⚠️ Il n'existe plus de variables `$IMAP_EMAIL` / `$IMAP_PASSWORD` globales dans `.env`. Le code Python doit recevoir ces credentials en paramètres, pas les lire depuis `os.environ`.
+> ⚠️ Le code Python doit recevoir ces credentials en paramètres, pas les lire depuis `os.environ`.
 
 ---
 
