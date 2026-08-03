@@ -9,8 +9,8 @@ Google Sheets est le système de tracking central de l'équipe de prospection. T
 ## Configuration
 
 ```
-SPREADSHEET_ID   : $GSHEETS_SPREADSHEET_ID  ← défini dans prospection-team/.env
-SHEET_NAME       : $GSHEETS_SHEET_NAME        ← défini dans prospection-team/.env
+SPREADSHEET_ID   : $GSHEETS_SPREADSHEET_ID  ← défini dans .env
+SHEET_NAME       : $GSHEETS_SHEET_NAME        ← défini dans .env
 SERVICE_ACCOUNT  : $GSHEETS_SERVICE_ACCOUNT_KEY ← chemin vers le fichier JSON de la clé
 BASE_URL         : https://sheets.googleapis.com/v4/spreadsheets
 ```
@@ -19,7 +19,7 @@ BASE_URL         : https://sheets.googleapis.com/v4/spreadsheets
 > 1. Aller sur [console.cloud.google.com](https://console.cloud.google.com)
 > 2. Créer un projet → activer l'API **Google Sheets**
 > 3. Créer un **compte de service** → télécharger la clé JSON
-> 4. Placer le fichier JSON dans `prospection-team/credentials/gsheets_key.json`
+> 4. Placer le fichier JSON dans `credentials/gsheets_key.json`
 > 5. Ouvrir ton Google Sheet → Partager avec l'email du compte de service (éditeur)
 > 6. Copier l'ID du Sheet depuis l'URL : `https://docs.google.com/spreadsheets/d/**{ID}**/edit`
 > 7. Ajouter `GSHEETS_SPREADSHEET_ID={ID}` dans `.env`
@@ -32,7 +32,7 @@ Toutes les requêtes nécessitent un token OAuth 2.0 généré depuis la clé du
 
 ```bash
 # Générer le token d'accès (valable 1h — à régénérer si expiré)
-set -a && source prospection-team/.env && set +a
+set -a && source .env && set +a
 
 TOKEN=$(python3 -c "
 import json, time, jwt, requests
@@ -172,7 +172,7 @@ curl -s -X PUT \
 | 15 | site_web | O | ICP Score |
 | 16 | score_icp | P | ICP Score |
 | 17 | statut_icp | Q | ICP Score |
-| 18 | qualite_site_actuel | R | Enrichissement |
+| 18 | etat_detecte | R | Enrichissement — état du prospect vis-à-vis du besoin ciblé, selon la grille définie dans `context.md` SECTION 4 |
 | 19 | signal_besoin_detecte | S | Enrichissement |
 | 20 | statut_lead | T | ICP Score / Envoi |
 | 21 | date_premier_contact | U | Envoi |

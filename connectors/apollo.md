@@ -10,14 +10,14 @@ Apollo.io est la plateforme de sourcing B2B utilisée par l'Agent Sourcing. Ce f
 
 ```
 BASE_URL : https://api.apollo.io/api/v1
-CLE_API  : $APOLLO_API_KEY  ← définie dans prospection-team/.env
+CLE_API  : $APOLLO_API_KEY  ← définie dans .env
 ```
 
 > Pour configurer ta clé API Apollo :
 > 1. Connecte-toi sur https://app.apollo.io
 > 2. Va dans Settings → Integrations → API
 > 3. Copie ta clé API (40+ caractères)
-> 4. Ouvre `prospection-team/.env` et remplace la valeur de `APOLLO_API_KEY`
+> 4. Ouvre `.env` et remplace la valeur de `APOLLO_API_KEY`
 > ⚠️ Après un upgrade de plan, régénère une nouvelle clé — l'ancienne reste sur l'ancien plan
 
 ---

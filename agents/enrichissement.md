@@ -15,9 +15,8 @@ Compléter chaque fiche lead avec les informations manquantes :
 - Site web de l'entreprise (si absent)
 - Description courte de l'activité
 - Actualité récente de l'entreprise (levée de fonds, expansion, nouveaux produits, recrutements)
-- Qualité du site web actuel (vieillissant, inexistant, basique, correct)
 - Présence sur les réseaux sociaux
-- Tout signal fort de besoin → lire **`context.md` → SECTION 4** pour la liste des signaux
+- **État détecté du prospect vis-à-vis du besoin ciblé** → lire **`context.md` → SECTION 4** pour la grille de signaux définie pour cette activité (chaque activité a sa propre grille — ne jamais supposer qu'il s'agit d'un audit de site web)
 
 ### Mission 2 — Rédaction de l'email personnalisé
 Rédiger un email de prospection court, professionnel et personnalisé pour chaque lead.
@@ -50,7 +49,8 @@ Rédiger un email de prospection court, professionnel et personnalisé pour chaq
    → Parler bénéfice, pas fonctionnalité — rester lié au problème évoqué
 
 3. PRÉSENTATION (1 phrase — formule fixe)
-   → "Je me présente, je suis Ilyass, à la tête du studio ajdaini.studio — [expertise courte liée au secteur]."
+   → Reprendre la formule définie dans `context.md` SECTION 1 ("Ton identité en une phrase"),
+     adaptée avec une expertise courte liée au secteur du lead
    → Toujours après la valeur, jamais en ouverture
 
 4. CTA (1 phrase)
@@ -84,7 +84,7 @@ Rédiger un email de prospection court, professionnel et personnalisé pour chaq
     "id_lead": "",
     "donnees_enrichies": {
       "site_web_actuel": "",
-      "qualite_site": "inexistant | vieillissant | basique | correct | bon",
+      "etat_detecte": "absent | insuffisant | basique | correct | bon",
       "description_activite": "",
       "actualite_recente": "",
       "signal_besoin": "",
@@ -113,7 +113,7 @@ curl -s -X PUT \
   "https://sheets.googleapis.com/v4/spreadsheets/$GSHEETS_SPREADSHEET_ID/values/$GSHEETS_SHEET_NAME!R{N}:S{N}?valueInputOption=USER_ENTERED" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"values": [["qualite_site_actuel", "signal_besoin_detecte"]]}'
+  -d '{"values": [["etat_detecte", "signal_besoin_detecte"]]}'
 ```
 
 **PUT 2 — Email rédigé (colonnes V et W)**

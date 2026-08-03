@@ -1,0 +1,19 @@
+{
+  "routing": "round_robin",
+  "senders": [
+    {
+      "id": "sender_1",
+      "actif": true,
+      "name": "[Nom affiché — ex: Ton Studio]",
+      "email": "[email1@tondomaine.com]",
+      "title": "[Ton titre — ex: Expert Webflow - Web Designer]",
+      "website": "[https://tonsite.com]",
+      "imap_host": "[imap.tonfournisseur.com]",
+      "imap_port": 993,
+      "imap_email": "[email1@tondomaine.com]",
+      "imap_password_var": "IMAP_PASSWORD_1",
+      "max_emails_par_jour": 50,
+      "sequences": ["sequence_a"]
+    }
+  ]
+}

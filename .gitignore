@@ -2,5 +2,12 @@
 .env
 credentials/
 
+# Données personnelles générées par /setup — propres à chaque utilisateur
+context.md
+senders.json
+
+# Paramètres Claude Code locaux à la machine — jamais partagés
+.claude/settings.local.json
+
 # Fichiers système
 .DS_Store

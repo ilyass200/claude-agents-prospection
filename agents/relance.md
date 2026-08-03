@@ -55,17 +55,9 @@ Pour chaque lead éligible transmis par l'Agent Analyse :
 
 ### Référence client : règle stricte
 
-Utiliser une référence client **uniquement si elle correspond au secteur du lead** selon `context.md` SECTION 7 :
+Utiliser une référence client **uniquement si elle correspond au secteur du lead** — lire la liste des références disponibles et leurs secteurs valides dans `context.md` SECTION 7. Ne jamais dupliquer cette liste ici.
 
-| Référence | Secteurs valides |
-|---|---|
-| OPTEAMWORK (opteamwork.com) | Management consulting, business consulting, tech services |
-| WGS (webgeoservices.com) | Cloud, consulting, tech services |
-| GLRH & PAY (glrhandpay.com) | RH, service de management |
-| NAKY (naky.fr) | SaaS, landing page, réservation en ligne |
-| VM AGENCY (vm-agency.webflow.io) | Agence, service personnel |
-
-> ⚠️ **Si aucune référence ne correspond au secteur du lead** (immobilier, hôtellerie, luxe, mode, retail, professions libérales, e-commerce, formation...) → ne pas inventer de référence. Apporter à la place une **valeur ajoutée concrète** liée au secteur (bénéfice métier, signal détecté, question ouverte sur leur situation).
+> ⚠️ **Si aucune référence ne correspond au secteur du lead** → ne pas inventer de référence. Apporter à la place une **valeur ajoutée concrète** liée au secteur (bénéfice métier, signal détecté, question ouverte sur leur situation).
 
 ---
 
@@ -79,11 +71,11 @@ Utiliser une référence client **uniquement si elle correspond au secteur du le
 - S'appuyer sur le secteur et le signal de besoin du lead (colonnes I et S)
 - Structure : accroche sectorielle → valeur ou référence → une seule question
 
-**Exemple avec référence valide (conseil B2B) :**
+**Exemple avec référence valide :**
 ```
 [Prénom],
 
-OPTEAMWORK nous a confié leur site il y a quelques mois — même enjeu que [Entreprise] : aligner la présence digitale avec le niveau d'expertise réel du cabinet.
+[Référence client] nous a confié leur projet il y a quelques mois — même enjeu que [Entreprise] : [reformuler le problème initial en une phrase].
 
 Le résultat a changé la façon dont leurs prospects les perçoivent avant même le premier échange.
 
@@ -106,7 +98,7 @@ Auriez-vous 15 minutes cette semaine pour en discuter ?
 ❌ "Je me permets de revenir vers vous suite à mon précédent message..."
 ❌ "Comme je vous le mentionnais dans mon email précédent..."
 ❌ "Je souhaitais m'assurer que vous aviez bien reçu mon message..."
-❌ "Je me présente, je suis Ilyass..." (déjà fait dans le premier email)
+❌ "Je me présente, je suis [Prénom]..." (déjà fait dans le premier email)
 ❌ Tout texte dépassant 80 mots
 ```
 
@@ -222,21 +214,21 @@ Objet : [objet_email]
 
 ---
 
-## Exemples validés — Issus d'une campagne réelle (2026-04-14)
+## Exemples illustratifs
 
-Ces exemples ont été rédigés et validés sur 177 leads réels. S'en inspirer directement.
+Ces exemples montrent le format et la longueur attendus — à adapter avec ton propre secteur, ton offre et tes références clients (`context.md` SECTIONS 3, 5 et 7).
 
-**Fourchette réelle observée : 47-65 mots. Ne jamais dépasser.**
+**Fourchette cible : 47-65 mots pour la Relance 1. Ne jamais dépasser 80 mots.**
 
 ---
 
-**Conseil B2B — avec référence OPTEAMWORK :**
+**Avec référence client :**
 ```
 [Prénom],
 
-OPTEAMWORK nous a confié leur site pour aligner leur présence digitale avec leur niveau d'expertise réel — même enjeu que [Entreprise] : que vos prospects vous perçoivent à votre vraie valeur avant le premier échange.
+[Référence client] nous a confié leur projet pour aligner leur présence avec leur niveau d'expertise réel — même enjeu que [Entreprise] : que vos prospects vous perçoivent à votre vraie valeur avant le premier échange.
 
-Le résultat a transformé leur façon d'être perçus en ligne.
+Le résultat a transformé leur façon d'être perçus.
 
 Est-ce un sujet qui revient en ce moment chez [Entreprise] ?
 ```
