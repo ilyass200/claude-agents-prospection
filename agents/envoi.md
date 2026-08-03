@@ -139,7 +139,7 @@ GET https://api.brevo.com/v3/smtp/emails?email={email_encodé}&limit=1&sort=desc
 Headers: api-key: $BREVO_API_KEY
 ```
 
-> ⚠️ Utiliser la clé API du **sender sélectionné** pour ce lead, pas une clé globale.
+> ⚠️ Utiliser `$BREVO_API_KEY` (clé unique, partagée par tous les senders — voir `connectors/brevo.md`).
 
 **Premier email uniquement (`numero_relance` = 0) :**
 
@@ -161,7 +161,7 @@ GET https://api.brevo.com/v3/contacts/{email_encodé}
 Headers: api-key: $BREVO_API_KEY
 ```
 
-> ⚠️ Utiliser la clé API du **sender sélectionné**.
+> ⚠️ Utiliser `$BREVO_API_KEY` (clé unique, partagée par tous les senders).
 
 | Réponse | Condition | Action | Statut sheet |
 |---|---|---|---|

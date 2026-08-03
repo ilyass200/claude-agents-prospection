@@ -43,7 +43,7 @@ Body:
     }
   ],
   "subject": "Objet de l'email",
-  "textContent": "[Corps de l'email — lu depuis corps_email dans le CSV]",
+  "textContent": "[Corps de l'email — lu depuis la colonne corps_email du Google Sheet]",
   "scheduledAt": "[datetime calculé — voir règle ci-dessous]"
 }
 ```
@@ -56,9 +56,6 @@ Body:
 > 5. Format final : `YYYY-MM-DDTHH:MM:SS+HH:MM` (ex: `2026-04-07T09:00:00+02:00`)
 >
 > Si `$SEND_TIME` n'est pas défini → envoyer immédiatement (ne pas inclure `scheduledAt` dans le body).
-
-```json
-```
 
 **Codes de succès :**
 - `200` ou `201` → envoi immédiat accepté
@@ -131,7 +128,7 @@ curl -s -X GET \
 
 ---
 
-### 3. Suivi d'un email — `GET /smtp/emails`
+### 4. Suivi d'un email — `GET /smtp/emails`
 
 Récupère les statistiques d'envoi (ouvertures, clics, bounces).
 
@@ -147,7 +144,7 @@ Headers:
 
 ---
 
-### 3. Liste des événements par email — `GET /smtp/statistics/events`
+### 5. Liste des événements par email — `GET /smtp/statistics/events`
 
 Pour récupérer tous les événements d'une campagne (utile pour l'Agent Analyse & Relance).
 

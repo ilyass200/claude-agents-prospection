@@ -224,28 +224,14 @@ Body:
 
 ---
 
-## Filtres sectoriels validés — `organization_industry_tag_ids`
+## Filtres sectoriels — `organization_industry_tag_ids`
 
-> Utiliser les tag IDs ci-dessous dans le champ `organization_industry_tag_ids` de la recherche.
-> Ces IDs ont été **testés et validés** sur l'API Apollo (`api_search`).
-> Le secteur est ainsi connu implicitement depuis le filtre, sans besoin de lire le champ `organization.industry`.
+> Les tag IDs à utiliser dans `organization_industry_tag_ids` sont **spécifiques à l'activité de chaque utilisateur** — ils sont définis dans `context.md` → SECTION 3, générée via `/setup`. Ce connecteur ne doit jamais coder en dur une liste de secteurs : ce qui est pertinent pour une activité ne l'est pas pour une autre.
 
-| Secteur | Tag ID | Score ICP |
-|---|---|---|
-| Immobilier (`real estate`) | `5567cd477369645401010000` | 25 pts |
-| Hôtellerie (`hospitality`) | `5567ce9d7369643bc19c0000` | 25 pts |
-| Restauration (`restaurants`) | `5567e0e0736964198de70700` | 25 pts |
-| Luxe & Bijouterie (`luxury goods & jewelry`) | `5567cda97369644cfd3e0000` | 25 pts |
-| Conseil & Management (`management consulting`) | `5567cdd47369643dbf260000` | 20 pts |
-| Expertise comptable (`accounting`) | `5567ce1f7369643b78570000` | 20 pts |
-| Retail & Commerce (`retail`) | `5567ced173696450cb580000` | 20 pts |
-| E-learning (`e-learning`) | `5567e19c7369641c48e70100` | 15 pts |
-| Formation & Coaching (`professional training & coaching`) | `5567cd49736964541d010000` | 15 pts |
+> **Pour trouver un tag ID :** faire une recherche sur [app.apollo.io](https://app.apollo.io) avec le secteur souhaité en filtre "Industry", puis inspecter la requête réseau envoyée par l'interface — le champ `organization_industry_tag_ids` contient l'ID hexadécimal correspondant.
 
-> Pour chercher dans **tous les secteurs cibles** en une seule requête, passer les 9 tag IDs ensemble.
-> Pour cibler un secteur précis, passer un seul tag ID.
-> Les secteurs `apparel & fashion`, `legal services`, `architecture & planning`, `business consulting`, `consumer goods`
-> n'ont pas encore de tag ID validé — utiliser les 9 secteurs ci-dessus comme base.
+> Pour chercher dans **plusieurs secteurs cibles** en une seule requête, passer leurs tag IDs ensemble dans le tableau. Pour cibler un secteur précis, passer un seul tag ID.
+> Si un secteur défini dans `context.md` n'a pas encore de tag ID renseigné (`[à compléter]`), ne pas lancer de recherche sur ce secteur tant qu'il n'est pas résolu — alerter l'Orchestrateur plutôt que d'improviser une valeur.
 
 ---
 
