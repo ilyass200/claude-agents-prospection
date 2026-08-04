@@ -131,10 +131,16 @@ Demande, avec des valeurs par défaut raisonnables proposées entre parenthèses
 - `ICP_SCORE_MINIMUM` (défaut : 50) — score minimum pour qu'un lead soit retenu
 - `PAYS_CIBLE` (défaut : France)
 - `CA_MINIMUM` (défaut : 500000) — chiffre d'affaires minimum du prospect en EUR
-- `SEND_TIME` (défaut : 09:00:00+02:00) — heure de début d'envoi des emails
 - `EMAIL_DELAY_MINUTES` (défaut : 3) — délai entre deux emails envoyés
 - `RELANCE_1_DELAI_JOURS` (défaut : 4)
 - `RELANCE_2_DELAI_JOURS` (défaut : 7, à partir de la relance 1)
+
+**`SEND_TIME` — pose explicitement la question, ne te contente pas d'un défaut :**
+
+Demande : *"Quand tu demandes l'envoi des emails, tu veux qu'ils partent immédiatement, ou qu'ils soient programmés à une heure précise (ex : 9h du matin, pour ne pas arriver en pleine nuit ou en dehors des horaires de bureau) ?"*
+
+- Si l'utilisateur veut un **envoi programmé** → demande l'heure et le fuseau horaire souhaités, écris `SEND_TIME=HH:MM:SS+HH:MM` dans `.env` (défaut si hésitation : `09:00:00+02:00`). Explique-lui le comportement résultant : si l'instruction d'envoi est donnée avant cette heure, l'envoi est programmé pour aujourd'hui à cette heure ; si elle est donnée après, il est programmé pour le lendemain à cette heure.
+- Si l'utilisateur veut un **envoi immédiat** (dès que l'instruction est donnée, sans délai) → laisse `SEND_TIME` **vide** dans `.env` (`SEND_TIME=`). C'est la seule façon de désactiver la programmation — ne jamais mettre une valeur ici si l'utilisateur veut de l'immédiat.
 
 ---
 
